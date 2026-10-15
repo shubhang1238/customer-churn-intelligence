@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Customer scoring · ChurnWise AI</title><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static',filename='css/style.css') }}"></head>
+<body><div class="app-shell"><aside class="sidebar"><a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">CW</span><span><b>ChurnWise</b><small>AI CUSTOMER INTELLIGENCE</small></span></a><div class="nav-label">WORKSPACE</div><a class="nav-item" href="{{ url_for('index') }}">▦ &nbsp; Overview</a><a class="nav-item active" href="{{ url_for('predict') }}">⌁ &nbsp; Customer scoring</a><a class="nav-item" href="{{ url_for('batch') }}">⇧ &nbsp; Batch predictions</a><a class="nav-item" href="{{ url_for('about') }}">✳ &nbsp; Methodology</a><div class="sidebar-bottom"><div class="author">MADE WITH CARE BY <strong>SHUBHANG</strong></div></div></aside>
+<main class="main-content"><header class="topbar"><div><span class="eyebrow">PREDICTION STUDIO</span><h1>Score a customer</h1></div><a class="btn btn-outline" href="{{ url_for('index') }}">← Back to overview</a></header><section class="page-intro"><span class="eyebrow">SINGLE-CUSTOMER INFERENCE</span><h2>Build a customer profile.</h2><p>Fill in the available signals. Blank numeric fields use the training dataset median; blank categories use the most common observed value.</p><div class="notice">Model threshold: <strong>{{ '%.2f'|format(threshold) }}</strong>. This score is a prioritization signal, not a guarantee that a customer will churn.</div></section>
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
+<form method="post" class="form-panel" id="predictForm"><div class="form-top"><div><span class="eyebrow">CUSTOMER PROFILE</span><h3>Signals & attributes</h3></div><button class="btn btn-quiet" type="button" id="fillDemo">Fill example profile</button></div>
+{% set sections = [
+("Profile & subscription", ["age","country","city","customer_segment","tenure_months","signup_channel","contract_type","gender"]),
+("Product engagement", ["monthly_logins","weekly_active_days","avg_session_time","features_used","usage_growth_rate","last_login_days_ago"]),
+("Revenue & billing", ["monthly_fee","total_revenue","payment_method","payment_failures","discount_applied","price_increase_last_3m"]),
+("Support & satisfaction", ["support_tickets","avg_resolution_time","complaint_type","csat_score","escalations","nps_score"]),
+("Marketing & advocacy", ["email_open_rate","marketing_click_rate","survey_response","referral_count"])
+] %}
+{% for title, fields in sections %}<section class="form-section"><div class="section-title"><span class="section-index">{{ '%02d'|format(loop.index) }}</span><div><h4>{{ title }}</h4><p>Optional inputs — model-ready defaults are available</p></div></div><div class="field-grid">
+{% for col in fields if col in categorical or col in numeric %}<label class="field"><span>{{ col.replace('_',' ')|title }}</span>
+{% if col in categorical %}<select name="{{ col }}"><option value="">Use most common</option>{% for val in categories[col] %}<option value="{{ val }}">{{ val }}</option>{% endfor %}</select>
+{% else %}<input type="number" name="{{ col }}" step="any" placeholder="Default: {{ '%.2f'|format(medians.get(col,0)) }}" value="" {% if col in ['age','tenure_months','monthly_logins','weekly_active_days','features_used','last_login_days_ago','monthly_fee','total_revenue','payment_failures','support_tickets','escalations','nps_score','referral_count'] %}min="0"{% endif %}>{% endif %}</label>{% endfor %}
+</div></section>{% endfor %}
+<div class="form-submit"><div><b>Ready to evaluate?</b><small>Prediction runs locally on the loaded model.</small></div><button class="btn btn-primary btn-large" type="submit">Calculate churn risk <span>↗</span></button></div></form><footer class="footer"><span>ChurnWise AI</span><span>Built by <strong>Shubhang</strong></span></footer></main></div>
+<script>
+document.getElementById('fillDemo').addEventListener('click', function(){
+ const form=document.getElementById('predictForm');
+ const demo={age:42,country:'India',customer_segment:'Standard',tenure_months:8,contract_type:'Monthly',monthly_logins:2,weekly_active_days:1,avg_session_time:3,features_used:2,usage_growth_rate:-0.2,last_login_days_ago:21,monthly_fee:79,total_revenue:500,payment_failures:2,support_tickets:4,avg_resolution_time:72,csat_score:2,nps_score:3,escalations:1,email_open_rate:0.1,marketing_click_rate:0.02,referral_count:0};
+ Object.entries(demo).forEach(([key,val])=>{const el=form.elements[key];if(el)el.value=String(val)});
+});
+</script></body></html>

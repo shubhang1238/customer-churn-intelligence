@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="ChurnWise AI — an explainable customer churn intelligence dashboard.">
+  <title>ChurnWise AI · Customer Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">CW</span><span><b>ChurnWise</b><small>AI CUSTOMER INTELLIGENCE</small></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <a class="nav-item active" href="{{ url_for('index') }}"><span>▦</span> Overview</a>
+    <a class="nav-item" href="{{ url_for('predict') }}"><span>⌁</span> Customer scoring</a>
+    <a class="nav-item" href="{{ url_for('batch') }}"><span>⇧</span> Batch predictions</a>
+    <a class="nav-item" href="{{ url_for('about') }}"><span>✳</span> Methodology</a>
+    <div class="sidebar-bottom">
+      <div class="model-status"><span class="status-dot {{ 'green' if model_ready else 'red' }}"></span><div><b>{{ 'Model online' if model_ready else 'Model artifact missing' }}</b><small>{{ payload.model }}</small></div></div>
+      <div class="author">MADE WITH CARE BY <strong>SHUBHANG</strong></div>
+    </div>
+  </aside>
+  <main class="main-content">
+    <header class="topbar"><div><span class="eyebrow">CUSTOMER RETENTION PLATFORM</span><h1>Customer intelligence</h1></div><div class="top-actions"><span class="live-pill"><i></i> MODEL {{ 'READY' if model_ready else 'UNAVAILABLE' }}</span><a class="btn btn-primary" href="{{ url_for('predict') }}">＋ Score a customer</a></div></header>
+    <section class="hero-panel">
+      <div class="hero-copy"><span class="hero-kicker">RETENTION, WITH SIGNAL</span><h2>See risk earlier.<br><em>Act more intelligently.</em></h2><p>Turn customer behaviour, engagement, billing and satisfaction signals into a clear prioritization workflow for retention teams.</p><div class="hero-actions"><a class="btn btn-light" href="{{ url_for('predict') }}">Run a prediction <span>↗</span></a><a class="hero-link" href="{{ url_for('about') }}">Explore the methodology →</a></div></div>
+      <div class="hero-orbit"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit-core"><span>CHURN</span><strong>{{ '%.1f'|format(payload.dataset.churn_rate*100) }}<small>%</small></strong><small>DATASET RATE</small></div><span class="orbit-tag tag-one">01 · ENGAGEMENT</span><span class="orbit-tag tag-two">02 · EXPERIENCE</span><span class="orbit-tag tag-three">03 · VALUE</span></div>
+    </section>
+    <section class="metric-grid">
+      <article class="metric-card"><div class="metric-head"><span>Customers analysed</span><span class="metric-icon violet">▤</span></div><strong class="metric-value">{{ "{:,}".format(payload.dataset.rows) }}</strong><div class="metric-foot"><span class="foot-dot"></span>{{ payload.dataset.columns }} source columns</div></article>
+      <article class="metric-card"><div class="metric-head"><span>Test accuracy</span><span class="metric-icon blue">◎</span></div><strong class="metric-value">{{ '%.1f'|format(accuracy*100) }}<small>%</small></strong><div class="metric-foot">Untouched test-set result</div></article>
+      <article class="metric-card"><div class="metric-head"><span>Churn recall</span><span class="metric-icon orange">↗</span></div><strong class="metric-value">{{ '%.1f'|format(recall*100) }}<small>%</small></strong><div class="metric-foot">Actual churners detected</div></article>
+      <article class="metric-card"><div class="metric-head"><span>F1 score</span><span class="metric-icon green">✳</span></div><strong class="metric-value">{{ '%.3f'|format(f1) }}</strong><div class="metric-foot">Precision / recall balance</div></article>
+    </section>
+    <section class="content-grid">
+      <article class="panel chart-panel"><div class="panel-heading"><div><span class="eyebrow">MODEL QUALITY</span><h3>Evaluation scorecard</h3><p>Multiple views of the model, not accuracy alone.</p></div><span class="panel-chip">TEST SET</span></div><div class="chart-wrap tall"><canvas id="metricsChart"></canvas></div><div class="chart-note">ROC-AUC {{ '%.3f'|format(payload.metrics.get('ROC-AUC',0)) }} · Average precision {{ '%.3f'|format(payload.metrics.get('Average precision',0)) }} · MCC {{ '%.3f'|format(payload.metrics.get('MCC',0)) }}</div></article>
+      <article class="panel dataset-panel"><div class="panel-heading"><div><span class="eyebrow">DATA PROFILE</span><h3>What makes this data useful?</h3><p>A multi-signal customer view.</p></div></div><div class="signal-list"><div class="signal-row"><span class="signal-icon">◉</span><div><b>Engagement</b><small>Logins, active days, usage growth, recency</small></div><span class="signal-num">01</span></div><div class="signal-row"><span class="signal-icon">＄</span><div><b>Commercial signals</b><small>Monthly fee, revenue, discount and price changes</small></div><span class="signal-num">02</span></div><div class="signal-row"><span class="signal-icon">♡</span><div><b>Customer experience</b><small>CSAT, NPS, tickets, escalations and resolution time</small></div><span class="signal-num">03</span></div><div class="signal-row"><span class="signal-icon">✉</span><div><b>Marketing & advocacy</b><small>Email opens, campaign clicks, survey and referrals</small></div><span class="signal-num">04</span></div></div><a class="text-link" href="{{ url_for('about') }}">See project differentiators →</a></article>
+    </section>
+    <section class="content-grid lower-grid">
+      <article class="panel"><div class="panel-heading"><div><span class="eyebrow">MODEL BENCHMARK</span><h3>Validation comparison</h3><p>Candidate models evaluated before final test.</p></div></div><div class="chart-wrap"><canvas id="comparisonChart"></canvas></div></article>
+      <article class="panel"><div class="panel-heading"><div><span class="eyebrow">INTERPRETABILITY</span><h3>Top model signals</h3><p>Permutation importance from notebook run.</p></div><span class="panel-chip">GLOBAL</span></div><div class="chart-wrap"><canvas id="importanceChart"></canvas></div></article>
+    </section>
+    <section class="cta-strip"><div><span class="eyebrow">FROM INSIGHT TO ACTION</span><h3>Prioritize the customers who need attention.</h3><p>Score one profile or upload a CSV to create a scored list for your workflow.</p></div><div class="cta-actions"><a class="btn btn-primary" href="{{ url_for('predict') }}">Score customer</a><a class="btn btn-outline" href="{{ url_for('batch') }}">Upload a dataset</a></div></section>
+    <footer class="footer"><span>ChurnWise AI · Customer churn intelligence</span><span>Built by <strong>Shubhang</strong> · Flask + scikit-learn</span></footer>
+  </main>
+</div>
+<script>
+window.CHURN_DASHBOARD = {{ payload|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body></html>
